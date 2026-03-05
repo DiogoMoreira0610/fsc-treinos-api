@@ -25,13 +25,13 @@ export class UpsertUserTrainData {
         weightInGrams: dto.weightInGrams,
         heightInCentimeters: dto.heightInCentimeters,
         age: dto.age,
-        bodyFatPercentage: dto.bodyFatPercentage,
+        bodyFatPercentage: dto.bodyFatPercentage / 100,
       },
       update: {
         weightInGrams: dto.weightInGrams,
         heightInCentimeters: dto.heightInCentimeters,
         age: dto.age,
-        bodyFatPercentage: dto.bodyFatPercentage,
+        bodyFatPercentage: dto.bodyFatPercentage / 100,
       },
     });
 
@@ -40,7 +40,7 @@ export class UpsertUserTrainData {
       weightInGrams: result.weightInGrams,
       heightInCentimeters: result.heightInCentimeters,
       age: result.age,
-      bodyFatPercentage: result.bodyFatPercentage,
+      bodyFatPercentage: result.bodyFatPercentage * 100,
     };
   }
 }

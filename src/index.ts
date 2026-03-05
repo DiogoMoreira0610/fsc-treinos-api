@@ -11,6 +11,7 @@ import {
   ZodTypeProvider,
 } from "fastify-type-provider-zod";
 
+import { aiRoutes } from "./routes/ai.js";
 import { authRoutes } from "./routes/auth.js";
 import { homeRoutes } from "./routes/home.js";
 import { meRoutes } from "./routes/me.js";
@@ -69,6 +70,7 @@ await app.register(workoutPlanRoutes, { prefix: "/workout-plans" });
 await app.register(homeRoutes, { prefix: "/home" });
 await app.register(statsRoutes, { prefix: "/stats" });
 await app.register(meRoutes, { prefix: "/me" });
+await app.register(aiRoutes, { prefix: "/ai" });
 
 app.withTypeProvider<ZodTypeProvider>().route({
   method: "GET",
