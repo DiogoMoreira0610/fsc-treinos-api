@@ -81,6 +81,17 @@ export const aiRoutes = async (app: FastifyInstance) => {
     schema: {
       tags: ["AI"],
       summary: "Chat with AI personal trainer",
+      body: z.object({
+        messages: z.array(
+          z
+            .object({
+              id: z.string(),
+              role: z.enum(["user", "assistant", "system"]),
+              parts: z.array(z.object({ type: z.string() }).passthrough()),
+            })
+            .passthrough(),
+        ),
+      }),
     },
     handler: async (request, reply) => {
       const session = await auth.api.getSession({
@@ -88,7 +99,10 @@ export const aiRoutes = async (app: FastifyInstance) => {
       });
 
       if (!session) {
-        return reply.status(401).send({ error: "Unauthorized" });
+        return reply.status(401).send({
+          error: "Unauthorized",
+          code: "UNAUTHORIZED",
+        });
       }
 
       const userId = session.user.id;
