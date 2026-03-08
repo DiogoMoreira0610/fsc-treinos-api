@@ -11,6 +11,7 @@ import {
   ZodTypeProvider,
 } from "fastify-type-provider-zod";
 
+import { env } from "./lib/env.js";
 import { aiRoutes } from "./routes/ai.js";
 import { authRoutes } from "./routes/auth.js";
 import { homeRoutes } from "./routes/home.js";
@@ -34,8 +35,8 @@ await app.register(fastifySwagger, {
     },
     servers: [
       {
-        description: "Localhost",
-        url: "http://localhost:8091",
+        description: "API Base URL",
+        url: env.API_BASE_URL,
       },
     ],
   },
@@ -43,7 +44,7 @@ await app.register(fastifySwagger, {
 });
 
 await app.register(fastifyCors, {
-  origin: ["http://localhost:3000"],
+  origin: [env.WEB_APP_BASE_URL],
   credentials: true,
 });
 
@@ -86,7 +87,7 @@ app.withTypeProvider<ZodTypeProvider>().route({
 await app.register(authRoutes);
 
 try {
-  await app.listen({ port: Number(process.env.PORT ?? 8091) });
+  await app.listen({ port: env.PORT });
 } catch (err) {
   app.log.error(err);
   process.exit(1);
