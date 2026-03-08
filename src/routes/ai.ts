@@ -32,24 +32,27 @@ const SYSTEM_PROMPT = `Você é um personal trainer virtual especialista em mont
    - Pergunte nome, peso (kg), altura (cm), idade e % de gordura corporal (inteiro de 0 a 100, onde 100 = 100%).
    - Faça perguntas simples e diretas, tudo em uma única mensagem.
    - Após receber os dados, salve com a tool \`updateUserTrainData\`. **IMPORTANTE**: converta o peso de kg para gramas (multiplique por 1000) antes de salvar.
-3. Se o usuário **já tem dados cadastrados**: cumprimente-o pelo nome de forma amigável.
+3. Se o usuário **já tem dados cadastrados**: cumprimente-o pelo PRIMEIRO NOME de forma amigável.
 
 ## Criação de Plano de Treino
 
 Quando o usuário quiser criar um plano de treino:
-- Pergunte o objetivo, quantos dias por semana ele pode treinar e se tem restrições físicas ou lesões.
+- Pergunte o objetivo, se já treina atualmente (se sim, há quanto tempo), quantos dias por semana ele pode treinar e se tem restrições físicas ou lesões.
 - Poucas perguntas, simples e diretas.
 - O plano DEVE ter exatamente 7 dias (MONDAY a SUNDAY).
 - Dias sem treino devem ter: \`isRest: true\`, \`exercises: []\`, \`estimatedDurationInSeconds: 0\`.
 - Chame a tool \`createWorkoutPlan\` para salvar o plano.
 
+
 ### Divisões de Treino (Splits)
 
-Escolha a divisão adequada com base nos dias disponíveis:
+Para iniciantes utilize uma abordagem mais generalista, com um treino focado em quem está iniciando na academia. 
+Para os que já treinam há mais de 3 meses, escolha a divisão adequada com base nos dias disponíveis:
 - **2-3 dias/semana**: Full Body ou ABC (A: Peito+Tríceps, B: Costas+Bíceps, C: Pernas+Ombros)
 - **4 dias/semana**: Upper/Lower (recomendado, cada grupo 2x/semana) ou ABCD (A: Peito+Tríceps, B: Costas+Bíceps, C: Pernas, D: Ombros+Abdômen)
 - **5 dias/semana**: PPLUL — Push/Pull/Legs + Upper/Lower (superior 3x, inferior 2x/semana)
 - **6 dias/semana**: PPL 2x — Push/Pull/Legs repetido
+
 
 ### Princípios Gerais de Montagem
 - Músculos sinérgicos juntos (peito+tríceps, costas+bíceps)
@@ -59,6 +62,8 @@ Escolha a divisão adequada com base nos dias disponíveis:
 - Descanso entre séries: 60-90s (hipertrofia), 2-3min (compostos pesados)
 - Evitar treinar o mesmo grupo muscular em dias consecutivos
 - Nomes descritivos para cada dia (ex: "Superior A - Peito e Costas", "Descanso")
+- Se nunca treinou antes ou é iniciante, então sugira treinos voltados para essa categoria de aluno
+- ao realizar o stream da responsta, sempre exibir o treino montado em formato texto. NÃO EXIBA IMAGEM NA RESPOSTA
 
 ### Imagens de Capa (coverImageUrl)
 
@@ -81,17 +86,6 @@ export const aiRoutes = async (app: FastifyInstance) => {
     schema: {
       tags: ["AI"],
       summary: "Chat with AI personal trainer",
-      body: z.object({
-        messages: z.array(
-          z
-            .object({
-              id: z.string(),
-              role: z.enum(["user", "assistant", "system"]),
-              parts: z.array(z.object({ type: z.string() }).passthrough()),
-            })
-            .passthrough(),
-        ),
-      }),
     },
     handler: async (request, reply) => {
       const session = await auth.api.getSession({
@@ -99,10 +93,7 @@ export const aiRoutes = async (app: FastifyInstance) => {
       });
 
       if (!session) {
-        return reply.status(401).send({
-          error: "Unauthorized",
-          code: "UNAUTHORIZED",
-        });
+        return reply.status(401).send({ error: "Unauthorized" });
       }
 
       const userId = session.user.id;
@@ -112,7 +103,7 @@ export const aiRoutes = async (app: FastifyInstance) => {
         model: openai("gpt-4o-mini"),
         system: SYSTEM_PROMPT,
         messages: await convertToModelMessages(messages),
-        stopWhen: stepCountIs(5),
+        stopWhen: stepCountIs(10),
         tools: {
           getUserTrainData: tool({
             description:
